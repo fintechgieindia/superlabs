@@ -30,8 +30,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
       ],
       currentIndex: selectedIndex,
       onTap: onItemTapped,
-      selectedFontSize: 16,
-      unselectedFontSize: 14,
+      selectedFontSize: 9, 
+      unselectedFontSize: 9,
     );
   }
 }
