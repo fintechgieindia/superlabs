@@ -13,6 +13,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
+      backgroundColor: Color(0xffffeff3),
       type: BottomNavigationBarType.fixed,
       items: const [
         BottomNavigationBarItem(
@@ -30,8 +31,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
       ],
       currentIndex: selectedIndex,
       onTap: onItemTapped,
-      selectedFontSize: 9, 
+      selectedFontSize: 9,
       unselectedFontSize: 9,
+      selectedItemColor: Color(0xffe49daf), // Active color
+      unselectedItemColor: Color(0xff6d6d6d), // Inactive color
     );
   }
 }

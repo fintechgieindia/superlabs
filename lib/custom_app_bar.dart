@@ -1,81 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  String searchQuery = '';
-  List<dynamic> searchResults = [];
-  static const String baseUrl = "https://bb2.ashwinsrivastava.com/api/v1/store/product/search";
-
-  Future<void> _handleSearch(String query) async {
-    setState(() {
-      searchQuery = query;
-    });
-
-    if (query.isEmpty) {
-      setState(() {
-        searchResults = [];
-      });
-      return;
-    }
-
-    try {
-      final response = await http.get(Uri.parse('$baseUrl?query=$query'));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          searchResults = json.decode(response.body);
-        });
-      } else {
-        print('Failed to load search results');
-      }
-    } catch (error) {
-      print('Error fetching search results: $error');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(onSearch: _handleSearch),
-      body: Center(
-        child: searchResults.isEmpty
-            ? Text(
-                'No Results for "$searchQuery"',
-                style: TextStyle(fontSize: 20),
-              )
-            : ListView.builder(
-                itemCount: searchResults.length,
-                itemBuilder: (context, index) {
-                  final result = searchResults[index];
-                  return ListTile(
-                    title: Text(result['name'] ?? 'Unknown'),
-                    subtitle: Text(result['description'] ?? ''),
-                  );
-                },
-              ),
-      ),
-    );
-  }
-}
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Function(String) onSearch;
@@ -85,8 +8,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+
     return AppBar(
-      elevation: 25,
+      surfaceTintColor: Colors.white,
+      backgroundColor: Colors.white, // Set background color to white
+      elevation: 0, // Remove the shadow effect to prevent default behavior
       centerTitle: true,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -96,6 +22,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           const SizedBox(width: 8),
           Container(
             width: screenWidth * 0.5,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3), // Shadow position
+                ),
+              ],
+            ),
             child: TextField(
               onSubmitted: (value) {
                 onSearch(value);
@@ -119,7 +57,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.shopping_basket, size: 28),
+            icon: const Icon(Icons.shopping_basket_outlined, size: 28),
             onPressed: () {},
           ),
         ],
@@ -128,5 +66,5 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(100);
+  Size get preferredSize => const Size.fromHeight(80);
 }

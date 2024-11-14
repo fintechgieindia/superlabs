@@ -26,6 +26,19 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   @override
+  void didUpdateWidget(covariant ProductPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.query != widget.query) {
+      setState(() {
+        _products.clear(); // Clear current products
+        _currentPage = 1; // Reset page number
+        _hasMoreProducts = true; // Reset the load condition
+      });
+      _fetchProducts(); // Fetch new products when query changes
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose(); // Clean up the controller
     super.dispose();
@@ -75,36 +88,55 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: _products.isEmpty && _isLoadingMore
           ? const Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                Expanded(
-                  child: _products.isEmpty
-                      ? const Center(child: Text("No products found"))
-                      : GridView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(8),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                          itemCount: _products.length,
-                          itemBuilder: (context, index) {
-                            final product = _products[index];
-                            return ProductCard(product: product);
-                          },
-                        ),
+        children: [
+          Container(
+            margin: EdgeInsets.only(top:5,left: 5,bottom: 5),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
                 ),
-                if (_isLoadingMore && _products.isNotEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ),
-              ],
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.filter_list),
+                ),
+              ),
             ),
+          ),
+          Expanded(
+            child: _products.isEmpty
+                ? const Center(child: Text("No products found"))
+                : GridView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: _products.length,
+              itemBuilder: (context, index) {
+                final product = _products[index];
+                return ProductCard(product: product);
+              },
+            ),
+          ),
+          if (_isLoadingMore && _products.isNotEmpty)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -123,22 +155,28 @@ class ProductCard extends StatelessWidget {
     final price = (product['variants'] != null && product['variants'].isNotEmpty)
         ? product['variants'][0]['currentPrice'] ?? 0
         : 0;
-    final rating = product['rating'] ?? 0.0; // Default rating if not provided
+    final rating = product['averageRating'] ?? 0.0;
+    final variantscount = product['variants'].length ?? 0;
+
+    // Get screen width to make the card responsive
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600; // Consider screens smaller than 600px as small
 
     return Card(
-      elevation: 4,
+      color: Colors.white,
+      elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          SizedBox(
+            height: isSmallScreen ? 135 : 150, // Adjust image size based on screen width
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
               child: Image.network(
                 thumbnailUrl,
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 150,
                 errorBuilder: (context, error, stackTrace) {
                   return Image.asset("images/superlabs.png", fit: BoxFit.cover);
                 },
@@ -146,25 +184,57 @@ class ProductCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
+            padding: EdgeInsets.all(isSmallScreen ? 6.0 : 8.0), // Adjust padding for small screens
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11), // Adjust font size
+            ),
           ),
+          // Padding(
+          //   padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          //   child: Text(
+          //     '$variantscount variants',
+          //     style: TextStyle(fontSize: 8),
+          //   ),
+          // ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Text('₹$price', style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 6.0 : 8.0),
             child: Row(
               children: [
-                Icon(Icons.star, color: Colors.orange, size: 16),
+                for (int i = 1; i <= 5; i++)
+                  Icon(
+                    i <= rating.floor()
+                        ? Icons.star
+                        : (i - 1 < rating && rating < i
+                        ? Icons.star_half
+                        : Icons.star_border),
+                    color: Colors.orange,
+                    size: isSmallScreen ? 12 : 16, // Adjust icon size for small screens
+                  ),
                 const SizedBox(width: 4),
-                Text(rating.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  rating.toStringAsFixed(1),
+                  style: TextStyle(fontSize: 10), // Adjust text size for rating
+                ),
               ],
             ),
           ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 6.0 : 8.0),
+            child: Text(
+              '₹$price',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 16, // Adjust font size for price
+              ),
+            ),
+          ),
+          SizedBox(height: 1,)
         ],
       ),
     );
   }
 }
+
+

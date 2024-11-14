@@ -42,10 +42,14 @@ dev_dependencies:
     sdk: flutter
   flutter_launcher_icons: ^0.14.1
 
-flutter_icons:
-  android: true
+flutter_launcher_icons:
+  android: "launcher_icon"
   ios: true
-  image_path: "images/logo.jpeg"
+  remove_alpha_ios: true
+  image_path: "images/logo-bb.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "images/logo-bb.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -69,6 +73,7 @@ flutter:
   assets:
     - images/superlab.png
     - images/superlabs.png
+    - images/logo-bb.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
